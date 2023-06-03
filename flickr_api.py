@@ -21,6 +21,7 @@ def search_photos(text : str, per_page = 100, page = 1, sort = "relevance"):
         "content_type" : 1,
         "format": "json",
         "nojsoncallback": 1,
+        "privacy_filter" : 1,
     }
 
     response = requests.get(endpoint, params=params)

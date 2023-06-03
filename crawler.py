@@ -5,10 +5,11 @@ from tqdm import tqdm
 
 import csv
 import os
+import time
 
-PER_PAGE = 10
+PER_PAGE = 100
 PAGE_START = 1
-PAGE_END = 3
+PAGE_END = 600
 
 TEXT = "portrait with landscape"
 
@@ -51,6 +52,7 @@ total_skipped_count = 0
 for page_num in range(PAGE_START, PAGE_END + 1):
     #API request for search
     search_response = flickr_api.search_photos(TEXT, per_page = PER_PAGE, page = page_num)
+    time.sleep(1) #sleep because 3600 request per hour limit
     search_results = search_response["photos"]
 
     #Download the photos
@@ -68,6 +70,7 @@ for page_num in range(PAGE_START, PAGE_END + 1):
         if photo_data["candownload"]:
             image_url = photo_data["sizes"]["Original"]["source"]
             file_utils.download_and_save_image(image_url, OUTPUT_IMAGE_DIR + searched_record["id"] + ".jpg")
+            time.sleep(1) #sleep because 3600 request per hour limit
             downloaded_count += 1
             total_downloaded_count += 1
 
