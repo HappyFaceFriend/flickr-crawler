@@ -8,15 +8,17 @@ def set_api_key(key : str):
     global api_key
     api_key = key
 
-# Method to search photos by tags. The tags should be a single string, seperated by commas.
-def search_photos(tags : str, per_page = 100, page = 1, sort = "interestingness_desc"):
+# Method to search photos by text. (flickr.photos.search)
+def search_photos(text : str, per_page = 100, page = 1, sort = "relevance"):
     endpoint = "https://api.flickr.com/services/rest/"
     params = {
         "method": "flickr.photos.search",
         "api_key": api_key,
-        "tags": tags,
+        "text": text,
         "per_page" : per_page,
         "page" : page,
+        "sort" : sort,
+        "content_type" : 1,
         "format": "json",
         "nojsoncallback": 1,
     }
@@ -25,7 +27,7 @@ def search_photos(tags : str, per_page = 100, page = 1, sort = "interestingness_
     data = json.loads(response.text)
 
     # Process the response and extract the desired information
-    # Can test results here : https://www.flickr.com/services/api/explore/flickr.photos.search
+    # You can test results here : https://www.flickr.com/services/api/explore/flickr.photos.search
     if data["stat"] == "ok":
         photos = data["photos"]["photo"]
         pages = data["photos"]["pages"]
@@ -37,7 +39,7 @@ def search_photos(tags : str, per_page = 100, page = 1, sort = "interestingness_
         return None
 
 
-# Method to search photos by tags. The tags should be a single string, seperated by commas.
+# Method to get urls of all available sizes of a photo. (flickr.photos.getSizes)
 def get_photoURL(photo_id : str):
     endpoint = "https://api.flickr.com/services/rest/"
     params = {
@@ -52,7 +54,7 @@ def get_photoURL(photo_id : str):
     data = json.loads(response.text)
 
     # Process the response and extract the desired information
-    # Can test results here : https://www.flickr.com/services/api/explore/flickr.photos.search
+    # Can test results here : https://www.flickr.com/services/api/explore/flickr.photos.getSizes
     if data["stat"] == "ok":
         candownload = data["sizes"]["candownload"] == 1
         sizes = {}
