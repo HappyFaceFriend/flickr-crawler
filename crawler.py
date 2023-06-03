@@ -86,6 +86,7 @@ for page_num in range(PAGE_START, PAGE_END + 1):
             total_downloaded_count += 1
 
             #Write to csv file
+            searched_record["id"] = unique_name
             with open(OUTPUT_CSV_PATH, mode='a', encoding = 'utf-8', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames = data_keys)
                 line = {key: searched_record[key] for key in data_keys}
