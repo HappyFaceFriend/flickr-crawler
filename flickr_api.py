@@ -40,7 +40,7 @@ def search_photos(text : str, per_page = 100, page = 1, sort = "relevance"):
 
 
 # Method to get urls of all available sizes of a photo. (flickr.photos.getSizes)
-def get_photoURL(photo_id : str):
+def get_photoURLs(photo_id : str):
     endpoint = "https://api.flickr.com/services/rest/"
     params = {
         "method": "flickr.photos.getSizes",
