@@ -60,16 +60,18 @@ for page_num in range(PAGE_START, PAGE_END + 1):
     skipped_count = 0
     for searched_record in tqdm(search_results, desc = f"Page {page_num}"):
         #API reqeust for getSizes
-        photo_data = flickr_api.get_photoURLs(searched_record["id"])
+        photo_id = searched_record["id"]
+        unique_name = photo_id + searched_record["owner"]
+        photo_data = flickr_api.get_photoURLs(photo_id)
 
         #Download photo if avilable
-        if searched_record["id"] in already_downloaded_ids:
+        if unique_name in already_downloaded_ids:
             skipped_count += 1
             total_skipped_count += 1
             continue
         if photo_data["candownload"]:
             image_url = photo_data["sizes"]["Original"]["source"]
-            file_utils.download_and_save_image(image_url, OUTPUT_IMAGE_DIR + searched_record["id"] + ".jpg")
+            file_utils.download_and_save_image(image_url, OUTPUT_IMAGE_DIR + unique_name + ".jpg")
             time.sleep(1) #sleep because 3600 request per hour limit
             downloaded_count += 1
             total_downloaded_count += 1
