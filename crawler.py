@@ -72,7 +72,7 @@ for page_num in range(PAGE_START, PAGE_END + 1):
             skipped_count += 1
             total_skipped_count += 1
             continue
-        if photo_data["candownload"]:
+        if True:# photo_data["candownload"]:
             #Set desired size
             download_size = "Original"
             for size in size_preference:
