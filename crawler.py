@@ -49,6 +49,8 @@ else:
 total_downloaded_count = 0
 total_skipped_count = 0
 
+size_preference = ["Large", "Large 1024", "Medium 800", "Medium 640", "Original"]
+
 for page_num in range(PAGE_START, PAGE_END + 1):
     #API request for search
     search_response = flickr_api.search_photos(TEXT, per_page = PER_PAGE, page = page_num)
@@ -63,6 +65,7 @@ for page_num in range(PAGE_START, PAGE_END + 1):
         photo_id = searched_record["id"]
         unique_name = photo_id + searched_record["owner"]
         photo_data = flickr_api.get_photoURLs(photo_id)
+        time.sleep(1) #sleep because 3600 request per hour limit
 
         #Download photo if avilable
         if unique_name in already_downloaded_ids:
@@ -70,9 +73,15 @@ for page_num in range(PAGE_START, PAGE_END + 1):
             total_skipped_count += 1
             continue
         if photo_data["candownload"]:
-            image_url = photo_data["sizes"]["Original"]["source"]
+            #Set desired size
+            download_size = "Original"
+            for size in size_preference:
+                if size in photo_data["sizes"].keys():
+                    download_size = size
+                    break
+            image_url = photo_data["sizes"][download_size]["source"]
+            #Download image
             file_utils.download_and_save_image(image_url, OUTPUT_IMAGE_DIR + unique_name + ".jpg")
-            time.sleep(1) #sleep because 3600 request per hour limit
             downloaded_count += 1
             total_downloaded_count += 1
 
