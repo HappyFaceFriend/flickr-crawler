@@ -8,7 +8,7 @@ import os
 import time
 
 PER_PAGE = 100
-PAGE_START = 1
+PAGE_START = 5
 PAGE_END = 600
 
 TEXT = "portrait with landscape"
@@ -61,29 +61,38 @@ for page_num in range(PAGE_START, PAGE_END + 1):
     downloaded_count = 0
     skipped_count = 0
     for searched_record in tqdm(search_results, desc = f"Page {page_num}"):
-        #API reqeust for getSizes
-        photo_id = searched_record["id"]
-        unique_name = photo_id + searched_record["owner"]
+        try:
+            #API reqeust for getSizes
+            photo_id = searched_record["id"]
+            unique_name = photo_id + searched_record["owner"]
 
-        #Skip if already downloaded
-        if unique_name in already_downloaded_ids:
-            skipped_count += 1
-            total_skipped_count += 1
+            #Skip if already downloaded
+            if unique_name in already_downloaded_ids:
+                skipped_count += 1
+                total_skipped_count += 1
+                continue
+            
+            photo_data = flickr_api.get_photoURLs(photo_id)
+            time.sleep(1) #sleep because 3600 request per hour limit
+
+            #Set desired size
+            download_size = "Original"
+            for size in size_preference:
+                if size in photo_data["sizes"].keys():
+                    download_size = size
+                    break
+            if download_size == "Original" and not searched_record["candownload"]:
+                download_size = photo_data["sizes"].keys()[-1]
+            image_url = photo_data["sizes"][download_size]["source"]
+        except:
+            #Wait and skip if something went wrong
+            try:
+                print(f"\nFatal error on photo {searched_record['id']}, therefore ignoring this one")
+            except:
+                print("\nFatal error, therefore ignoring this one")
+            time.sleep(60)
             continue
-        
-        photo_data = flickr_api.get_photoURLs(photo_id)
-        time.sleep(1) #sleep because 3600 request per hour limit
 
-        #Set desired size
-        download_size = "Original"
-        for size in size_preference:
-            if size in photo_data["sizes"].keys():
-                download_size = size
-                break
-        if download_size == "Original" and not searched_record["candownload"]:
-            download_size = photo_data["sizes"].keys()[-1]
-        image_url = photo_data["sizes"][download_size]["source"]
-        
         #Download image
         file_utils.download_and_save_image(image_url, OUTPUT_IMAGE_DIR + unique_name + ".jpg")
         downloaded_count += 1

@@ -15,6 +15,8 @@ def download_and_save_image(url, save_path):
         with open(save_path, 'wb') as file:
             for chunk in response.iter_content(1024):
                 file.write(chunk)
+        return True
+    return False
 
 def save_dicts_csv(datas, desired_keys, save_path):
     output_dir = os.path.dirname(save_path)
