@@ -40,12 +40,11 @@ def create_csv(output_csv_path, data_keys):
             writer.writeheader()
 
 #Read csv data file and return ids
-def get_ids_from_csv(output_csv_path):
+def read_from_csv(output_csv_path):
     data = []
     file = open(output_csv_path, mode='r', encoding = 'utf-8', newline='')
-    reader = csv.reader(file)
+    reader = csv.DictReader(file)
     for row in reader:
-        if row:
-            data.append(row[0])
+        data.append(row)
     file.close()
     return data
