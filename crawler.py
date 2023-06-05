@@ -64,11 +64,7 @@ def binary_search_download(min_date, max_date):
     search_response = flickr_api.search_photos(TEXT, per_page = 1, page = 1, upload_date_boundaries = (l_date, r_date))
 
     total_count = search_response["total"]
-    if total_count > MAX_PHOTO_PER_QUERY:
-        mid_date = (l_date + r_date) // 2 
-        binary_search_download(l_date, mid_date)
-        binary_search_download(mid_date + 1, r_date)
-    else:
+    if total_count <= MAX_PHOTO_PER_QUERY or l_date == r_date:
         max_page = max(total_count-1, 0) // PER_PAGE + 1
         
         min_date_formatted = datetime.datetime.fromtimestamp(min_date).strftime("%y/%m/%d")
@@ -81,6 +77,10 @@ def binary_search_download(min_date, max_date):
             print(f"Page {page_num} : {download_result}")
             total_downloaded_count += download_result["downloaded"]
             total_skipped_count += download_result["skipped"]
+    else:
+        mid_date = (l_date + r_date) // 2 
+        binary_search_download(l_date, mid_date)
+        binary_search_download(mid_date + 1, r_date)
 
 binary_search_download(min_date, max_date)
 
