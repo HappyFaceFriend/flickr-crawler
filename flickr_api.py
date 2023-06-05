@@ -1,6 +1,8 @@
 import requests
 import json
 
+import time
+
 api_key = "NONE"
 
 # Set your Flickr API key
@@ -9,8 +11,9 @@ def set_api_key(key : str):
     api_key = key
 
 # Method to search photos by text. (flickr.photos.search)
-def search_photos(text : str, per_page = 100, page = 1, sort = "relevance"):
+def search_photos(text : str, per_page = 100, page = 1, sort = "relevance", upload_date_boundaries = (0, 1)):
     endpoint = "https://api.flickr.com/services/rest/"
+
     params = {
         "method": "flickr.photos.search",
         "api_key": api_key,
@@ -22,11 +25,17 @@ def search_photos(text : str, per_page = 100, page = 1, sort = "relevance"):
         "format": "json",
         "nojsoncallback": 1,
         "privacy_filter" : 1,
+        "min_upload_date": upload_date_boundaries[0],
+        "max_upload_date": upload_date_boundaries[1],
     }
+    if upload_date_boundaries == (0, 1):
+        params.pop("min_upload_date")
+        params.pop("max_upload_date")
 
     response = requests.get(endpoint, params=params)
     data = json.loads(response.text)
 
+    time.sleep(1)   #sleep because 3600 request per hour limit
     # Process the response and extract the desired information
     # You can test results here : https://www.flickr.com/services/api/explore/flickr.photos.search
     if data["stat"] == "ok":
@@ -53,7 +62,7 @@ def get_photoURLs(photo_id : str):
 
     response = requests.get(endpoint, params=params)
     data = json.loads(response.text)
-
+    time.sleep(1)   #sleep because 3600 request per hour limit
     # Process the response and extract the desired information
     # Can test results here : https://www.flickr.com/services/api/explore/flickr.photos.getSizes
     if data["stat"] == "ok":

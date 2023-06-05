@@ -1,15 +1,21 @@
 import file_utils
+import crawl_utils
 import flickr_api
 
 from tqdm import tqdm
 
-import csv
 import os
 import time
+import datetime
 
-PER_PAGE = 100
-PAGE_START = 5
-PAGE_END = 600
+PER_PAGE = 10
+
+MAX_PHOTO_PER_QUERY = 4000
+
+MIN_DATE = "January 1, 2010"
+MAX_DATE = "June 5, 2023"
+#Set to this to search up to today's photos
+#MAX_DATE = int(datetime.datetime.today().timestamp())
 
 TEXT = "portrait with landscape"
 
@@ -18,95 +24,54 @@ API_KEY_FILE_PATH = "api_key.txt"
 OUTPUT_CSV_PATH = f"results/datas/{TEXT}.csv"
 OUTPUT_IMAGE_DIR = "results/images/"
 
+size_preference = ["Large", "Large 1024", "Medium 800", "Medium 640", "Original"]
 
-#Get API key from txt file
-with open(API_KEY_FILE_PATH, 'r', encoding='utf-8') as file:
-    api_key = file.readline().strip()
-    flickr_api.set_api_key(api_key)
+#Set API Key
+crawl_utils.set_api_key(API_KEY_FILE_PATH)
 
 
-data_keys = ["id", "title"]
+csv_keys = ["id", "title"]
 already_downloaded_ids = []
 
-#Create csv data file if not exists
+#Retrieve all ids of downloaded images from csv file, create one if not exists
 if not os.path.exists(OUTPUT_CSV_PATH):
-    output_dir = os.path.dirname(OUTPUT_CSV_PATH)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    with open(OUTPUT_CSV_PATH, mode='w', encoding = 'utf-8', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames = data_keys)
-        writer.writeheader()
+    file_utils.create_csv(OUTPUT_CSV_PATH, csv_keys)
 else:
-    #Retrieve all ids of downloaded images if csv data file exists
-    file = open(OUTPUT_CSV_PATH, mode='r', encoding = 'utf-8', newline='')
-    reader = csv.reader(file)
-    for row in reader:
-        if row:
-            already_downloaded_ids.append(row[0])
-    file.close()
+    already_downloaded_ids = file_utils.get_ids_from_csv(OUTPUT_CSV_PATH)
 
 
 total_downloaded_count = 0
 total_skipped_count = 0
 
-size_preference = ["Large", "Large 1024", "Medium 800", "Medium 640", "Original"]
 
-for page_num in range(PAGE_START, PAGE_END + 1):
-    #API request for search
-    search_response = flickr_api.search_photos(TEXT, per_page = PER_PAGE, page = page_num)
-    time.sleep(1) #sleep because 3600 request per hour limit
-    search_results = search_response["photos"]
+min_date = int(datetime.datetime.strptime(MIN_DATE, "%B %d, %Y").timestamp())
+max_date = int(datetime.datetime.strptime(MAX_DATE, "%B %d, %Y").timestamp())
 
-    #Download the photos
-    downloaded_count = 0
-    skipped_count = 0
-    for searched_record in tqdm(search_results, desc = f"Page {page_num}"):
-        try:
-            #API reqeust for getSizes
-            photo_id = searched_record["id"]
-            unique_name = photo_id + searched_record["owner"]
+def binary_search_download(min_date, max_date):
+    global total_skipped_count, total_downloaded_count
+    l_date, r_date = min_date, max_date
 
-            #Skip if already downloaded
-            if unique_name in already_downloaded_ids:
-                skipped_count += 1
-                total_skipped_count += 1
-                continue
-            
-            photo_data = flickr_api.get_photoURLs(photo_id)
-            time.sleep(1) #sleep because 3600 request per hour limit
+    search_response = flickr_api.search_photos(TEXT, per_page = 1, page = 1, upload_date_boundaries = (l_date, r_date))
 
-            #Set desired size
-            download_size = "Original"
-            for size in size_preference:
-                if size in photo_data["sizes"].keys():
-                    download_size = size
-                    break
-            if download_size == "Original" and not searched_record["candownload"]:
-                download_size = photo_data["sizes"].keys()[-1]
-            image_url = photo_data["sizes"][download_size]["source"]
-        except:
-            #Wait and skip if something went wrong
-            try:
-                print(f"\nFatal error on photo {searched_record['id']}, therefore ignoring this one")
-            except:
-                print("\nFatal error, therefore ignoring this one")
-            time.sleep(60)
-            continue
+    total_count = search_response["total"]
+    if total_count > MAX_PHOTO_PER_QUERY:
+        mid_date = (l_date + r_date) // 2 
+        binary_search_download(l_date, mid_date)
+        binary_search_download(mid_date + 1, r_date)
+    else:
+        max_page = max(total_count-1, 0) // PER_PAGE + 1
+        
+        min_date_formatted = datetime.datetime.fromtimestamp(min_date).strftime("%y/%m/%d")
+        max_date_formatted = datetime.datetime.fromtimestamp(max_date).strftime("%y/%m/%d")
+        for page_num in tqdm(range(1, max_page + 1), desc=f"Downloading {min_date_formatted}~{max_date_formatted}"):
+            #API request for search
+            search_response = flickr_api.search_photos(TEXT, per_page = PER_PAGE, page = page_num, upload_date_boundaries = (l_date, r_date))
+            download_result = crawl_utils.download_search_results(search_response, size_preference, already_downloaded_ids, OUTPUT_IMAGE_DIR, OUTPUT_CSV_PATH, csv_keys)
+            print(f"Page {page_num} : {download_result}")
+            total_downloaded_count += download_result["downloaded"]
+            total_skipped_count += download_result["skipped"]
 
-        #Download image
-        file_utils.download_and_save_image(image_url, OUTPUT_IMAGE_DIR + unique_name + ".jpg")
-        downloaded_count += 1
-        total_downloaded_count += 1
-
-        #Write to csv file
-        searched_record["id"] = unique_name
-        with open(OUTPUT_CSV_PATH, mode='a', encoding = 'utf-8', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames = data_keys)
-            line = {key: searched_record[key] for key in data_keys}
-            writer.writerow(line)
-
-    print(f"Downloaded {downloaded_count}, Skipped {skipped_count} out of {len(search_results)}")
-    
+binary_search_download(min_date, max_date)
 
 print(f"All images downladed successfully!!")
 print(f"Downloaded {total_downloaded_count}, Skipped {total_skipped_count}.")

@@ -29,3 +29,23 @@ def save_dicts_csv(datas, desired_keys, save_path):
         for result in datas:
             record = {key: result[key] for key in desired_keys}
             writer.writerow(record)
+
+#Create csv data file
+def create_csv(output_csv_path, data_keys):
+        output_dir = os.path.dirname(output_csv_path)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        with open(output_csv_path, mode='w', encoding = 'utf-8', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames = data_keys)
+            writer.writeheader()
+
+#Read csv data file and return ids
+def get_ids_from_csv(output_csv_path):
+    data = []
+    file = open(output_csv_path, mode='r', encoding = 'utf-8', newline='')
+    reader = csv.reader(file)
+    for row in reader:
+        if row:
+            data.append(row[0])
+    file.close()
+    return data
