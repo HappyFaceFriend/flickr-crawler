@@ -6,8 +6,11 @@ from tqdm import tqdm
 
 import os
 import time
+import sys
 import datetime
 
+LOG_TO_FILE = True
+LOG_FILE_PATH = "results/logs/log.txt"
 
 
 PER_PAGE = 100
@@ -27,6 +30,9 @@ OUTPUT_CSV_PATH = f"results/datas/{TEXT}-2.csv"
 OUTPUT_IMAGE_DIR = "results/images2/"
 
 size_preference = ["Large", "Large 1024", "Medium 800", "Medium 640", "Original"]
+
+if LOG_TO_FILE:
+    file_utils.set_log_to_file(LOG_FILE_PATH)
 
 #Set API Key
 crawl_utils.set_api_key(API_KEY_FILE_PATH)
@@ -49,6 +55,8 @@ total_skipped_count = 0
 min_date = int(datetime.datetime.strptime(MIN_DATE, "%B %d, %Y").timestamp())
 max_date = int(datetime.datetime.strptime(MAX_DATE, "%B %d, %Y").timestamp())
 
+
+
 def binary_search_download(min_date, max_date):
     global total_skipped_count, total_downloaded_count
     l_date, r_date = min_date, max_date
@@ -65,6 +73,7 @@ def binary_search_download(min_date, max_date):
         
         min_date_formatted = datetime.datetime.fromtimestamp(min_date).strftime("%y/%m/%d")
         max_date_formatted = datetime.datetime.fromtimestamp(max_date).strftime("%y/%m/%d")
+        print(f"Downloading {min_date_formatted}~{max_date_formatted}")
         for page_num in tqdm(range(1, max_page + 1), desc=f"Downloading {min_date_formatted}~{max_date_formatted}"):
             #API request for search
             search_response = flickr_api.search_photos(TEXT, per_page = PER_PAGE, page = page_num, upload_date_boundaries = (l_date, r_date))

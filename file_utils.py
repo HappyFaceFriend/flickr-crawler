@@ -1,6 +1,7 @@
 import requests
 import os
 import csv
+import sys
 
 def download_and_save_image(url, save_path):
     response = requests.get(url, stream=True)
@@ -32,12 +33,12 @@ def save_dicts_csv(datas, desired_keys, save_path):
 
 #Create csv data file
 def create_csv(output_csv_path, data_keys):
-        output_dir = os.path.dirname(output_csv_path)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        with open(output_csv_path, mode='w', encoding = 'utf-8', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames = data_keys)
-            writer.writeheader()
+    output_dir = os.path.dirname(output_csv_path)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    with open(output_csv_path, mode='w', encoding = 'utf-8', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames = data_keys)
+        writer.writeheader()
 
 #Read csv data file and return ids
 def read_from_csv(output_csv_path):
@@ -48,3 +49,13 @@ def read_from_csv(output_csv_path):
         data.append(row)
     file.close()
     return data
+
+
+def set_log_to_file(output_file_path):
+    output_dir = os.path.dirname(output_file_path)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    log_file = open(output_file_path, 'w', encoding='utf-8', buffering = 1)
+    sys.stdout = log_file
+

@@ -3,7 +3,7 @@ import file_utils
 
 import time
 import csv
-import tqdm
+from tqdm import tqdm 
 
 #Get API key from txt file's first line and use it
 def set_api_key(api_key_file_path):
@@ -24,7 +24,7 @@ def download_search_results(search_response, size_preference, already_downloaded
         collection = tqdm(search_results)
     else:
         collection = search_results
-        
+
     for searched_record in collection:
         try:
             #API reqeust for getSizes
