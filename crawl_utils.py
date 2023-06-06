@@ -43,6 +43,9 @@ def download_search_results(search_response, size_preference, already_downloaded
                 continue
             
             photo_data = flickr_api.get_photoURLs(photo_id)
+            if photo_data is None:
+                error_count += 1
+                continue
 
             #Set desired size
             download_size = "Original"
@@ -55,21 +58,21 @@ def download_search_results(search_response, size_preference, already_downloaded
             image_url = photo_data["sizes"][download_size]["source"]
         except:
             #Wait and skip if something went wrong
-            '''try:
-                print(f"\nFatal error on photo {searched_record['id']}, therefore ignoring this one")
-            except:
-                print("\nFatal error, therefore ignoring this one")'''
             error_count += 1
             continue
 
         #Download image
-        file_utils.download_and_save_image(image_url, output_img_dir + photo_filename)
-        downloaded_count += 1
+        download_success = file_utils.download_and_save_image(image_url, output_img_dir + photo_filename)
+        if download_success:
+            downloaded_count += 1
 
-        #Write to csv file
-        with open(output_csv_path, mode='a', encoding = 'utf-8', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames = csv_keys)
-            line = {key: searched_record[key] for key in csv_keys}
-            writer.writerow(line)
+
+            #Write to csv file
+            with open(output_csv_path, mode='a', encoding = 'utf-8', newline='') as file:
+                writer = csv.DictWriter(file, fieldnames = csv_keys)
+                line = {key: searched_record[key] for key in csv_keys}
+                writer.writerow(line)
+        else:
+            error_count += 1
     return {"downloaded" : downloaded_count, "skipped" : skipped_count, "error" : error_count}
     

@@ -4,8 +4,11 @@ import csv
 import sys
 
 def download_and_save_image(url, save_path):
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+    except:
+        return False
     
     if response.status_code == 200:
         # Create the directory if it doesn't exist

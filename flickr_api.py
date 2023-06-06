@@ -31,21 +31,23 @@ def search_photos(text : str, per_page = 100, page = 1, sort = "relevance", uplo
     if upload_date_boundaries == (0, 1):
         params.pop("min_upload_date")
         params.pop("max_upload_date")
+    try:
+        response = requests.get(endpoint, params=params)
+        data = json.loads(response.text)
 
-    response = requests.get(endpoint, params=params)
-    data = json.loads(response.text)
+        time.sleep(1)   #sleep because 3600 request per hour limit
+        # Process the response and extract the desired information
+        # You can test results here : https://www.flickr.com/services/api/explore/flickr.photos.search
+        if data["stat"] == "ok":
+            photos = data["photos"]["photo"]
+            pages = data["photos"]["pages"]
+            total = data["photos"]["total"]
+            return {"pages" : pages, "total" : total, "photos" : photos}
 
-    time.sleep(1)   #sleep because 3600 request per hour limit
-    # Process the response and extract the desired information
-    # You can test results here : https://www.flickr.com/services/api/explore/flickr.photos.search
-    if data["stat"] == "ok":
-        photos = data["photos"]["photo"]
-        pages = data["photos"]["pages"]
-        total = data["photos"]["total"]
-        return {"pages" : pages, "total" : total, "photos" : photos}
-
-    else:
-        print("Error:", data["message"])
+        else:
+            print("Error:", data["message"])
+            return None
+    except:
         return None
 
 
@@ -59,19 +61,23 @@ def get_photoURLs(photo_id : str):
         "format": "json",
         "nojsoncallback": 1,
     }
+    try:
+        response = requests.get(endpoint, params=params)
+        data = json.loads(response.text)
+        time.sleep(1)   #sleep because 3600 request per hour limit
 
-    response = requests.get(endpoint, params=params)
-    data = json.loads(response.text)
-    time.sleep(1)   #sleep because 3600 request per hour limit
-    # Process the response and extract the desired information
-    # Can test results here : https://www.flickr.com/services/api/explore/flickr.photos.getSizes
-    if data["stat"] == "ok":
-        candownload = data["sizes"]["candownload"] == 1
-        sizes = {}
-        for size_data in data["sizes"]["size"]:
-            sizes[size_data["label"]] = {"width" : size_data["width"], "height" : size_data["height"], "source" : size_data["source"], "url" : size_data["url"]}
-        return {"candownload" : candownload, "sizes" : sizes}
+        # Process the response and extract the desired information
+        # Can test results here : https://www.flickr.com/services/api/explore/flickr.photos.getSizes
+        if data["stat"] == "ok":
+            candownload = data["sizes"]["candownload"] == 1
+            sizes = {}
+            for size_data in data["sizes"]["size"]:
+                sizes[size_data["label"]] = {"width" : size_data["width"], "height" : size_data["height"], "source" : size_data["source"], "url" : size_data["url"]}
+            return {"candownload" : candownload, "sizes" : sizes}
 
-    else:
-        print("Error:", data["message"])
+        else:
+            print("Error:", data["message"])
+            return None
+    
+    except:
         return None

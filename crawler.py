@@ -10,14 +10,14 @@ import sys
 import datetime
 
 LOG_TO_FILE = True
-LOG_FILE_PATH = "results/logs/log.txt"
+LOG_FILE_PATH = f"results/logs/log-{datetime.datetime.today().strftime('%y%m%d')}.txt"
 
 
 PER_PAGE = 100
 
 MAX_PHOTO_PER_QUERY = 4000
 
-MIN_DATE = "January 1, 2010"
+MIN_DATE = "January 20, 2018"
 MAX_DATE = "June 5, 2023"
 #Set to this to search up to today's photos
 #MAX_DATE = int(datetime.datetime.today().timestamp())
@@ -61,14 +61,24 @@ def binary_search_download(min_date, max_date):
     global total_skipped_count, total_downloaded_count
     l_date, r_date = min_date, max_date
 
+    if min_date > max_date:
+        min_date = max_date
+
+    min_date_formatted = datetime.datetime.fromtimestamp(min_date).strftime("%y/%m/%d")
+    max_date_formatted = datetime.datetime.fromtimestamp(max_date).strftime("%y/%m/%d")
+
     search_response = flickr_api.search_photos(TEXT, per_page = 1, page = 1, upload_date_boundaries = (l_date, r_date))
+    if search_response is None:
+        time.sleep(120)
+        search_response = flickr_api.search_photos(TEXT, per_page = 1, page = 1, upload_date_boundaries = (l_date, r_date))
+        if search_response is None:
+            print(f"Fatal Error!! : failed to search photos in [{min_date_formatted}~{max_date_formatted}], therefore skipping this timeframe")
+            return
 
     total_count = search_response["total"]
     if total_count <= MAX_PHOTO_PER_QUERY or l_date == r_date:
         max_page = max(total_count-1, 0) // PER_PAGE + 1
         
-        min_date_formatted = datetime.datetime.fromtimestamp(min_date).strftime("%y/%m/%d")
-        max_date_formatted = datetime.datetime.fromtimestamp(max_date).strftime("%y/%m/%d")
         print(f"Downloading {min_date_formatted}~{max_date_formatted}")
         for page_num in tqdm(range(1, max_page + 1), desc=f"Downloading {min_date_formatted}~{max_date_formatted}"):
             #API request for search
