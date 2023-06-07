@@ -4,11 +4,17 @@ import json
 import time
 
 api_key = "NONE"
+sleep_seconds = 1
 
 # Set your Flickr API key
 def set_api_key(key : str):
     global api_key
     api_key = key
+    
+# Set sleep time after each API call
+def set_sleep_time(seconds = 1):
+    global sleep_seconds
+    sleep_seconds = seconds
 
 # Method to search photos by text. (flickr.photos.search)
 def search_photos(text : str, per_page = 100, page = 1, sort = "relevance", upload_date_boundaries = (0, 1)):
@@ -35,7 +41,7 @@ def search_photos(text : str, per_page = 100, page = 1, sort = "relevance", uplo
         response = requests.get(endpoint, params=params)
         data = json.loads(response.text)
 
-        time.sleep(1)   #sleep because 3600 request per hour limit
+        time.sleep(sleep_seconds)
         # Process the response and extract the desired information
         # You can test results here : https://www.flickr.com/services/api/explore/flickr.photos.search
         if data["stat"] == "ok":
@@ -45,10 +51,9 @@ def search_photos(text : str, per_page = 100, page = 1, sort = "relevance", uplo
             return {"pages" : pages, "total" : total, "photos" : photos}
 
         else:
-            print("Error:", data["message"])
-            return None
-    except:
-        return None
+            raise Exception("Error : Got a bad response. \n" + data["message"])
+    except Exception as e:
+        raise Exception("Error : search_photos failed to get response or the response was corrupted. Read the error message below. \n" + str(e))
 
 
 # Method to get urls of all available sizes of a photo. (flickr.photos.getSizes)
@@ -64,7 +69,7 @@ def get_photoURLs(photo_id : str):
     try:
         response = requests.get(endpoint, params=params)
         data = json.loads(response.text)
-        time.sleep(1)   #sleep because 3600 request per hour limit
+        time.sleep(sleep_seconds)
 
         # Process the response and extract the desired information
         # Can test results here : https://www.flickr.com/services/api/explore/flickr.photos.getSizes
@@ -76,8 +81,6 @@ def get_photoURLs(photo_id : str):
             return {"candownload" : candownload, "sizes" : sizes}
 
         else:
-            print("Error:", data["message"])
-            return None
-    
-    except:
-        return None
+            raise Exception("Error : Got a bad response. \n" + data["message"])
+    except Exception as e:
+        raise Exception("Error : get_photoURLs failed to get response or the response was corrupted. Read the error message below. \n" + str(e))
