@@ -83,6 +83,12 @@ def binary_search_download(min_date, max_date):
         for page_num in tqdm(range(1, max_page + 1), desc=f"Downloading {min_date_formatted}~{max_date_formatted}"):
             #API request for search
             search_response = flickr_api.search_photos(TEXT, per_page = PER_PAGE, page = page_num, upload_date_boundaries = (l_date, r_date))
+            if search_response is None:
+                time.sleep(120)
+                search_response = flickr_api.search_photos(TEXT, per_page = PER_PAGE, page = page_num, upload_date_boundaries = (l_date, r_date))
+                if search_response is None:
+                    print(f"Fatal Error!! : failed to search photos in [{min_date_formatted}~{max_date_formatted}], therefore skipping this timeframe")
+                    return
             download_result = crawl_utils.download_search_results(search_response, size_preference, already_downloaded_datas, OUTPUT_IMAGE_DIR, OUTPUT_CSV_PATH, csv_keys, visualize = True)
             print(f"Page {page_num} : {download_result}")
             total_downloaded_count += download_result["downloaded"]
