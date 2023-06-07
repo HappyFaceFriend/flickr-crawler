@@ -10,14 +10,14 @@ import sys
 import datetime
 
 LOG_TO_FILE = True
-LOG_FILE_PATH = f"results/logs/log-{datetime.datetime.today().strftime('%y%m%d')}.txt"
+LOG_FILE_PATH = f"results/logs/log-{datetime.datetime.today().strftime('%y%m%d%H%M')}.txt"
 
 
 PER_PAGE = 100
 
 MAX_PHOTO_PER_QUERY = 4000
 
-MIN_DATE = "January 20, 2018"
+MIN_DATE = "January 20, 2022"
 MAX_DATE = "June 5, 2023"
 #Set to this to search up to today's photos
 #MAX_DATE = int(datetime.datetime.today().timestamp())
