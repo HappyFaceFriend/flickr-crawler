@@ -26,7 +26,7 @@ TEXT = "portrait with eiffel tower" #the search keyword
 MIN_DATE = "2010/01/01"
 MAX_DATE = "2023/06/05"
 #Set to this to search up to today's photos.
-#MAX_DATE = time_utils.today_unixtime()
+#MAX_DATE = time_utils.unixtime2str(time_utils.today_unixtime())
 
 OUTPUT_IMAGE_DIR = f"results/images/{TEXT}/"
 
@@ -46,57 +46,61 @@ def download_success_callback(photo_data):
 
 ###############################
 
-if LOG_TO_FILE:
-    file_utils.set_log_to_file(LOG_FILE_PATH)
+def crawl():
+    if LOG_TO_FILE:
+        file_utils.set_log_to_file(LOG_FILE_PATH)
 
-#Set API Key
-crawl_utils.set_api_key(API_KEY_FILE_PATH)
+    #Set API Key
+    crawl_utils.set_api_key(API_KEY_FILE_PATH)
 
 
-total_downloaded_count = 0
-total_skipped_count = 0
+    total_downloaded_count = 0
+    total_skipped_count = 0
 
-min_date = time_utils.str2unixtime(MIN_DATE)
-max_date = time_utils.str2unixtime(MAX_DATE)
+    min_date = time_utils.str2unixtime(MIN_DATE)
+    max_date = time_utils.str2unixtime(MAX_DATE)
 
-def binary_search_download(min_date, max_date):
-    global total_skipped_count, total_downloaded_count
-    l_date, r_date = min_date, max_date
+    def binary_search_download(min_date, max_date):
+        global total_skipped_count, total_downloaded_count
+        l_date, r_date = min_date, max_date
 
-    if l_date > r_date:
-        l_date = r_date
+        if l_date > r_date:
+            l_date = r_date
 
-    min_date_formatted = time_utils.unixtime2str(l_date)
-    max_date_formatted = time_utils.unixtime2str(r_date)
+        min_date_formatted = time_utils.unixtime2str(l_date)
+        max_date_formatted = time_utils.unixtime2str(r_date)
 
-    search_params = crawl_utils.SearchParams(TEXT, 1, l_date, r_date, PER_PAGE)
-
-    total_count = crawl_utils.get_total_photo_count(search_params)
-    if total_count == -1:
-        print(f"Fatal Error!! : failed to search photos in [{min_date_formatted}~{max_date_formatted}], therefore skipping this timeframe")
-        return
-    
-    if total_count <= MAX_PHOTO_PER_QUERY or l_date == r_date:
-        max_page = max(total_count-1, 0) // PER_PAGE + 1
-        
         search_params = crawl_utils.SearchParams(TEXT, 1, l_date, r_date, PER_PAGE)
-        print(f"Downloading {min_date_formatted}~{max_date_formatted}")
-        for page_num in tqdm(range(1, max_page + 1), desc=f"Downloading {min_date_formatted}~{max_date_formatted}"):
-            search_params.page = page_num
-            download_results = crawl_utils.downwload_single_page(search_params, SIZE_PREFERENCE, image_name_setter, OUTPUT_IMAGE_DIR, download_success_callback)
-            if download_results is None:
-                print(f"Fatal Error!! : failed to search photos in [{min_date_formatted}~{max_date_formatted}] page {page_num}, therefore skipping this page")
-                continue
-            print(f"Page {page_num} : {download_results}")
-            total_downloaded_count += download_results["downloaded"]
-            total_skipped_count += download_results["skipped"]
-    else:
-        mid_date = (l_date + r_date) // 2 
-        binary_search_download(l_date, mid_date)
-        binary_search_download(mid_date + 1, r_date)
 
-binary_search_download(min_date, max_date)
+        total_count = crawl_utils.get_total_photo_count(search_params)
+        if total_count == -1:
+            print(f"Fatal Error!! : failed to search photos in [{min_date_formatted}~{max_date_formatted}], therefore skipping this timeframe")
+            return
+        
+        if total_count <= MAX_PHOTO_PER_QUERY or l_date == r_date:
+            max_page = max(total_count-1, 0) // PER_PAGE + 1
+            
+            search_params = crawl_utils.SearchParams(TEXT, 1, l_date, r_date, PER_PAGE)
+            print(f"Downloading {min_date_formatted}~{max_date_formatted}")
+            for page_num in tqdm(range(1, max_page + 1), desc=f"Downloading {min_date_formatted}~{max_date_formatted}"):
+                search_params.page = page_num
+                download_results = crawl_utils.downwload_single_page(search_params, SIZE_PREFERENCE, image_name_setter, OUTPUT_IMAGE_DIR, download_success_callback)
+                if download_results is None:
+                    print(f"Fatal Error!! : failed to search photos in [{min_date_formatted}~{max_date_formatted}] page {page_num}, therefore skipping this page")
+                    continue
+                print(f"Page {page_num} : {download_results}")
+                total_downloaded_count += download_results["downloaded"]
+                total_skipped_count += download_results["skipped"]
+        else:
+            mid_date = (l_date + r_date) // 2 
+            binary_search_download(l_date, mid_date)
+            binary_search_download(mid_date + 1, r_date)
 
-print(f"All images downladed successfully!!")
-print(f"Downloaded {total_downloaded_count}, Skipped {total_skipped_count}.")
+    binary_search_download(min_date, max_date)
 
+    print(f"All images downladed successfully!!")
+    print(f"Downloaded {total_downloaded_count}, Skipped {total_skipped_count}.")
+
+
+if __name__ == '__main__':
+    crawl()
