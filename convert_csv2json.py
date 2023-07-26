@@ -1,15 +1,14 @@
 import file_utils
 import json
 
-CSV_PATH = "results/datas/portrait with landscape-3.csv"
-JSON_PATH = "results/datas/portrait with landscape-3.json"
+CSV_PATH = "../sandbox/datas/portrait with eiffel tower.csv"
+JSON_PATH = "../sandbox/datas/d.json"
 
 #Read CSV
 data = file_utils.read_from_csv(CSV_PATH)
 
 ### Modify data here ###############
-
-
+print(len(data))
 
 
 ####################################

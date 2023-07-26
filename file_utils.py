@@ -31,7 +31,7 @@ def create_csv(output_csv_path, data_keys):
 def read_from_csv(output_csv_path):
     data = []
     file = open(output_csv_path, mode='r', encoding = 'utf-8', newline='')
-    reader = csv.DictReader(file)
+    reader = csv.DictReader(file, fieldnames=['id', 'title','owner','name'])
     for row in reader:
         data.append(row)
     file.close()
