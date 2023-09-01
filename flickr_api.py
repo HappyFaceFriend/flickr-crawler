@@ -17,7 +17,7 @@ def set_sleep_time(seconds = 1):
     sleep_seconds = seconds
 
 # Method to search photos by text. (flickr.photos.search)
-def search_photos(text : str, per_page = 100, page = 1, sort = "relevance", upload_date_boundaries = (0, 1)):
+def search_photos(text : str, per_page = 100, page = 1, sort = "interestingness-desc", upload_date_boundaries = (0, 1)):
     endpoint = "https://api.flickr.com/services/rest/"
 
     params = {
@@ -27,7 +27,7 @@ def search_photos(text : str, per_page = 100, page = 1, sort = "relevance", uplo
         "per_page" : per_page,
         "page" : page,
         "sort" : sort,
-        "content_type" : 1,
+        "content_types" : 1,
         "format": "json",
         "nojsoncallback": 1,
         "privacy_filter" : 1,

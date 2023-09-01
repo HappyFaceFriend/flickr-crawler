@@ -22,9 +22,9 @@ PER_PAGE = 100  #max : 500
 MAX_PHOTO_PER_QUERY = 4000 #4000 is recommended
 SIZE_PREFERENCE = ["Large", "Large 1024", "Medium 800", "Medium 640", "Original"] #first is prioritized
 
-TEXT = "portrait with eiffel tower" #the search keyword
+TEXT = "portrait with landscape" #the search keyword
 MIN_DATE = "2010/01/01"
-MAX_DATE = "2023/06/05"
+MAX_DATE = "2023/09/02"
 #Set to this to search up to today's photos.
 #MAX_DATE = time_utils.unixtime2str(time_utils.today_unixtime())
 
